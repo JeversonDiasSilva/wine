@@ -1,5 +1,8 @@
 #!/bin/bash
 
+clear
+echo "@"
+
 # Lista dos pacotes para baixar
 packages=(
   ge-custom
