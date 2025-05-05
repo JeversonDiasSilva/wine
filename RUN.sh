@@ -20,6 +20,7 @@ DEST_DIR="$BASE_DIR/custom"
 # Códigos de cor para terminal
 GREEN="\e[1;32m"
 RESET="\e[0m"
+BOLD_ORANGE="\e[1;38;5;208m"  # Bold + cor laranja (256 cores)
 
 # Cria o diretório de destino
 mkdir -p "$DEST_DIR"
@@ -27,7 +28,11 @@ cd "$BASE_DIR" || exit 1
 
 # Loop pelos pacotes
 for pack in "${packages[@]}"; do
-  echo -ne "Instalando: $pack ... "
+  if [[ "$pack" == *wine* ]]; then
+    echo -ne "Instalando: ${BOLD_ORANGE}${pack}${RESET} ... "
+  else
+    echo -ne "Instalando: $pack ... "
+  fi
 
   # Baixar silenciosamente
   wget -q "https://github.com/JeversonDiasSilva/wine/releases/download/1.0/$pack"
