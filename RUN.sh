@@ -1,8 +1,9 @@
 #!/bin/bash
 
 clear
-echo "@"
-
+echo ""
+echo ""
+echo ""
 # Lista dos pacotes para baixar
 packages=(
   ge-custom
@@ -54,3 +55,5 @@ done
 
 echo
 echo -e "${GREEN}Todos os pacotes foram instalados com sucesso!${RESET}"
+echo
+echo -e "${BOLD_ORANGE}By @JCGAMESCLASSICOS${RESET}"
