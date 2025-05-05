@@ -28,18 +28,14 @@ cd "$BASE_DIR" || exit 1
 
 # Loop pelos pacotes
 for pack in "${packages[@]}"; do
-  if [[ "$pack" == *wine* ]]; then
-    echo -ne "Instalando: ${BOLD_ORANGE}${pack}${RESET} ... "
-  else
-    echo -ne "Instalando: $pack ... "
-  fi
+  echo -ne "Instalando: ${BOLD_ORANGE}${pack}${RESET} ... "
 
   # Baixar silenciosamente
   wget -q "https://github.com/JeversonDiasSilva/wine/releases/download/1.0/$pack"
   
   # Verifica se o download ocorreu
   if [ ! -f "$pack" ]; then
-    echo -e "\nErro ao baixar $pack. Pulando..."
+    echo -e "\nErro ao baixar ${BOLD_ORANGE}${pack}${RESET}. Pulando..."
     continue
   fi
 
