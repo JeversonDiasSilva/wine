@@ -13,5 +13,8 @@ curl -L https://raw.githubusercontent.com/JeversonDiasSilva/wine/refs/heads/main
 curl -l https://raw.githubusercontent.com/JeversonDiasSilva/wine/refs/heads/main/Proton-GE-Proton7-42.sh | bash
 ```
 
+<h2>Instalar Todos</h2>
+```bash
+```
 
 # @JCGAMESCLASSICOS
