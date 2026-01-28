@@ -1,10 +1,18 @@
 #!/bin/bash
-sleep 3
+
+INSTALL_PATH="/usr/bin/wine-install"
+
+echo "Instalando Wine Installer no sistema..."
+
+cat << 'EOF' > "$INSTALL_PATH"
+#!/bin/bash
+sleep 2
 clear
 
 # ================== CORES ==================
 GREEN="\e[1;32m"
 RED="\e[1;31m"
+YELLOW="\e[1;33m"
 RESET="\e[0m"
 BOLD_GREEN="\e[1;32m"
 BOLD_ORANGE="\e[1;38;5;208m"
@@ -25,101 +33,85 @@ echo -e "║        Compatível V40 / V41 / V42 / V43           ║"
 echo -e "╚════════════════════════════════════════════════════╝${RESET}"
 echo
 
-# ================== PACOTES + SHA256 ==================
-declare -A PACKAGES=(
-  ["ge-custom"]=""
-  ["GE-Proton7-54"]="66baa96da9a468d16d51e047ec55c166ebb3d374235810cbe0cb5b7d29d7ecad"
-  ["GE-Proton8-2"]="4489500ba32f7aa0f034ee4b940ef3c5e5775c5a85b3421697c90b2c744a3cda"
-  ["GE-Proton8-5"]="7dcc28026b8142b9400e0d3b628bf55278a15fde364e0177355152072c3b7dfb"
-  ["GE-Proton9-5"]="10c4861c65190944d969c7cabb4c70c49b41d73b53fb9430d6d545351bed3e8f5"
-  ["GE-Proton9-14"]="38951bfc41bfe20578c9cf3189440b729135a63fc1a7b89baed5a3d2b1b2021e"
-  ["Proton-GE-Proton7-42"]=""
-  ["wine-9.17-amd64"]=""
-  ["wine-9.22-staging-tkg"]="76b9f985af42f3f6acba6a738de34283c8884fe670bf300e482e03dbb4c595eb"
-  ["wine-10.0-rc4-staging-tkg"]="2f1f88157ac8982ca16babd85b474797e24df7dee3075e2527be51f62adebe95"
-  ["wine-proton-9.0-1"]="3693a14bd94d24291c33386fc8fb5d13c0b9f09a13bb937ed4b8a373a0616043"
-  ["wine-proton-9.0-2"]="81dd2f98fd56aeec150cbc31a1bd435497b4e2cd4415cc646fd3bf136970deb4"
-  ["wine-proton-9.0-3"]="537f9d06926d332cc725ba4d2bfe880ae86b80f009ed16956c05f6f3f1bdfafe"
-  ["wine-proton-exp-9.0"]="0ff0f2ccd0e6d1b0fbcb6436f8a9797956b62405ec20e93c6e3253da1311e5ab"
+# ================== PACOTES ==================
+PACKAGES=(
+  ge-custom
+  GE-Proton7-54
+  GE-Proton8-2
+  GE-Proton8-5
+  GE-Proton9-5
+  GE-Proton9-14
+  Proton-GE-Proton7-42
+  wine-9.17-amd64
+  wine-9.22-staging-tkg
+  wine-10.0-rc4-staging-tkg
+  wine-proton-9.0-1
+  wine-proton-9.0-2
+  wine-proton-9.0-3
+  wine-proton-exp-9.0
 )
 
-# ================== FUNÇÕES ==================
+is_installed() {
+  [[ -d "$DEST_DIR/$1" ]]
+}
+
 install_package() {
-  local PACK="$1"
-  local SHA="${PACKAGES[$PACK]}"
+  local PKG="$1"
 
-  echo -ne "${WHITE}Baixando ${BOLD_ORANGE}${PACK}${RESET} ... "
-  wget -q "$REPO_URL/$PACK"
-
-  if [[ ! -f "$PACK" ]]; then
-    echo -e "${RED}ERRO${RESET}"
+  if is_installed "$PKG"; then
+    echo -e "${YELLOW}→ $PKG já instalado. Pulando.${RESET}"
     return
   fi
 
-  if [[ -n "$SHA" ]]; then
-    CALC_SHA=$(sha256sum "$PACK" | awk '{print $1}')
-    if [[ "$CALC_SHA" != "$SHA" ]]; then
-      echo -e "${RED}SHA256 INVÁLIDO${RESET}"
-      rm -f "$PACK"
-      return
-    fi
-  fi
+  echo -e "${WHITE}Baixando ${BOLD_ORANGE}$PKG${RESET}"
+  wget --show-progress "$REPO_URL/$PKG"
 
-  echo -e "${GREEN}OK${RESET}"
-  echo -ne "${WHITE}Extraindo... ${RESET}"
+  [[ ! -f "$PKG" ]] && echo -e "${RED}Erro no download${RESET}" && return
 
-  unsquashfs -d "$DEST_DIR/$PACK" "$PACK" > /dev/null 2>&1
-  rm -f "$PACK"
+  unsquashfs -d "$DEST_DIR/$PKG" "$PKG" > /dev/null 2>&1
+  rm -f "$PKG"
 
-  echo -e "${GREEN}INSTALADO!${RESET}"
+  echo -e "${GREEN}✔ $PKG instalado${RESET}"
 }
 
-install_all() {
-  for PACK in "${!PACKAGES[@]}"; do
-    echo
-    install_package "$PACK"
-  done
-}
-
-# ================== MENU PRINCIPAL ==================
+# ================== MENU ==================
 while true; do
   echo
   echo -e "${BOLD_ORANGE}1)${RESET} Instalar UM pacote"
   echo -e "${BOLD_ORANGE}2)${RESET} Instalar TODOS os pacotes"
   echo -e "${BOLD_ORANGE}3)${RESET} Sair"
   echo
-
-  read -rp "Escolha uma opção: " opt < /dev/tty
+  read -rp "Escolha uma opção: " opt
 
   case "$opt" in
     1)
-      echo
-      OPTIONS=("${!PACKAGES[@]}" "VOLTAR")
-      PS3="Selecione um pacote: "
-      select PACK in "${OPTIONS[@]}"; do
-        [[ "$PACK" == "VOLTAR" ]] && break
-        [[ -n "$PACK" ]] && install_package "$PACK"
+      select PKG in "${PACKAGES[@]}" "VOLTAR"; do
+        [[ "$PKG" == "VOLTAR" ]] && break
+        [[ -n "$PKG" ]] && install_package "$PKG"
         break
-      done < /dev/tty
+      done
       ;;
     2)
-      echo
-      echo -e "${BOLD_ORANGE}Instalando TODOS os pacotes...${RESET}"
-      install_all
+      for PKG in "${PACKAGES[@]}"; do
+        install_package "$PKG"
+      done
       ;;
     3)
       break
       ;;
-    *)
-      echo -e "${RED}Opção inválida!${RESET}"
-      sleep 1
-      ;;
   esac
 done
+EOF
 
-# ================== FINAL ==================
+chmod +x "$INSTALL_PATH"
+
 echo
-echo -e "${GREEN}Processo finalizado.${RESET}"
-echo -e "${BOLD_ORANGE}══════════════════════════════════════════════════════"
-echo -e "   By @JCGAMESCLASSICOS - Batocera Wine Pack          "
-echo -e "══════════════════════════════════════════════════════${RESET}"
+echo "Salvando overlay do Batocera..."
+batocera-save-overlay
+
+echo
+echo "✅ INSTALAÇÃO CONCLUÍDA!"
+echo "👉 Agora execute o comando:"
+echo
+echo "   wine-install"
+echo
