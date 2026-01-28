@@ -21,7 +21,7 @@ cd "$BASE_DIR" || exit 1
 # ================== HEADER ==================
 echo -e "${BOLD_GREEN}╔════════════════════════════════════════════════════╗"
 echo -e "║     INSTALAÇÃO WINE / PROTON / GE - BATOCERA       ║"
-echo -e "║            Compatível V40 / V41  /V42  /V43                  ║"
+echo -e "║        Compatível V40 / V41 / V42 / V43           ║"
 echo -e "╚════════════════════════════════════════════════════╝${RESET}"
 echo
 
@@ -88,17 +88,19 @@ while true; do
   echo -e "${BOLD_ORANGE}2)${RESET} Instalar TODOS os pacotes"
   echo -e "${BOLD_ORANGE}3)${RESET} Sair"
   echo
-  read -rp "Escolha uma opção: " opt
+
+  read -rp "Escolha uma opção: " opt < /dev/tty
 
   case "$opt" in
     1)
       echo
       OPTIONS=("${!PACKAGES[@]}" "VOLTAR")
+      PS3="Selecione um pacote: "
       select PACK in "${OPTIONS[@]}"; do
         [[ "$PACK" == "VOLTAR" ]] && break
         [[ -n "$PACK" ]] && install_package "$PACK"
         break
-      done
+      done < /dev/tty
       ;;
     2)
       echo
@@ -110,6 +112,7 @@ while true; do
       ;;
     *)
       echo -e "${RED}Opção inválida!${RESET}"
+      sleep 1
       ;;
   esac
 done
