@@ -1,8 +1,10 @@
 #!/bin/bash
+# install-wine.sh
+# Script para instalar o instalador wine-install no Batocera
 
 INSTALL_PATH="/usr/bin/wine-install"
 
-echo "Instalando Wine Installer no sistema..."
+echo -e "\n${BOLD_ORANGE}Instalando Wine Installer no sistema...${RESET}"
 
 cat << 'EOF' > "$INSTALL_PATH"
 #!/bin/bash
@@ -29,7 +31,7 @@ cd "$BASE_DIR" || exit 1
 # ================== HEADER ==================
 echo -e "${BOLD_GREEN}╔════════════════════════════════════════════════════╗"
 echo -e "║     INSTALAÇÃO WINE / PROTON / GE - BATOCERA       ║"
-echo -e "║        Compatível V40 / V41 / V42 / V43           ║"
+echo -e "║        Compatível V40 / V41 / V42 / V43            ║"
 echo -e "╚════════════════════════════════════════════════════╝${RESET}"
 echo
 
@@ -57,21 +59,38 @@ is_installed() {
 
 install_package() {
   local PKG="$1"
+  local URL="$REPO_URL/$PKG"
 
   if is_installed "$PKG"; then
-    echo -e "${YELLOW}→ $PKG já instalado. Pulando.${RESET}"
+    echo -e "${YELLOW}✔ $PKG já instalado — pulando${RESET}"
     return
   fi
 
-  echo -e "${WHITE}Baixando ${BOLD_ORANGE}$PKG${RESET}"
-  wget --show-progress "$REPO_URL/$PKG"
+  echo
+  echo -e "${BOLD_ORANGE}Baixando:${RESET} $PKG"
 
-  [[ ! -f "$PKG" ]] && echo -e "${RED}Erro no download${RESET}" && return
+  wget -q \
+    --show-progress \
+    --progress=bar:force:noscroll \
+    -O "$PKG" \
+    "$URL"
 
+  if [[ ! -f "$PKG" ]]; then
+    echo -e "${RED}Erro no download${RESET}"
+    return
+  fi
+
+  echo -e "${WHITE}Extraindo...${RESET}"
   unsquashfs -d "$DEST_DIR/$PKG" "$PKG" > /dev/null 2>&1
   rm -f "$PKG"
 
-  echo -e "${GREEN}✔ $PKG instalado${RESET}"
+  echo -e "${BOLD_GREEN}✔ Instalado com sucesso!${RESET}"
+}
+
+install_all() {
+  for PKG in "${PACKAGES[@]}"; do
+    install_package "$PKG"
+  done
 }
 
 # ================== MENU ==================
@@ -85,33 +104,43 @@ while true; do
 
   case "$opt" in
     1)
-      select PKG in "${PACKAGES[@]}" "VOLTAR"; do
+      echo
+      OPTIONS=("${PACKAGES[@]}" "VOLTAR")
+      select PKG in "${OPTIONS[@]}"; do
         [[ "$PKG" == "VOLTAR" ]] && break
         [[ -n "$PKG" ]] && install_package "$PKG"
         break
       done
       ;;
     2)
-      for PKG in "${PACKAGES[@]}"; do
-        install_package "$PKG"
-      done
+      install_all
       ;;
     3)
       break
       ;;
+    *)
+      echo -e "${RED}Opção inválida!${RESET}"
+      ;;
   esac
 done
+
+echo
+echo -e "${GREEN}Processo finalizado.${RESET}"
+echo -e "${BOLD_ORANGE}══════════════════════════════════════════════════════"
+echo -e "   By @JCGAMESCLASSICOS - Batocera Wine Pack          "
+echo -e "══════════════════════════════════════════════════════${RESET}"
+
 EOF
 
 chmod +x "$INSTALL_PATH"
 
 echo
-echo "Salvando overlay do Batocera..."
+echo -e "${BOLD_ORANGE}Salvando overlay do Batocera...${RESET}"
 batocera-save-overlay
 
 echo
-echo "✅ INSTALAÇÃO CONCLUÍDA!"
-echo "👉 Agora execute o comando:"
+echo -e "${GREEN}✅ INSTALAÇÃO CONCLUÍDA!${RESET}"
+echo -e "${BOLD_ORANGE}Agora execute o comando:${RESET}"
 echo
-echo "   wine-install"
+echo "    wine-install"
 echo
